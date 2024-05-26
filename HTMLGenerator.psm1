@@ -7,6 +7,7 @@ Set-StrictMode -Version latest
 
 class HTMLGenParams {
     [string] $OutPath;
+    [string] $Title;
 }
 
 class HTMLGenerator {
