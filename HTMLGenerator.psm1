@@ -47,6 +47,9 @@ class HTMLGenerator {
     AddHead() {
         $this.Code += ,'<head>'
         $this.Code += ,'<meta chatset="UTF-8">'
+        if ($this.Param.Title) {
+            $this.Code += ,"<title>$($this.Param.Title)</title>"
+        }
         $this.AddHeadContent()
         $this.Code += ,'<style>'
         $this.AddHeadStyle()
