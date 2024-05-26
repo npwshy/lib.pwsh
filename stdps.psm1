@@ -107,7 +107,7 @@ class Logging {
 
 function log([string]$txt) {
     Write-Host $txt
-    [Logging]::WriteLog(($txt)
+    [Logging]::WriteLog($txt)
 }
 
 function logv([string]$txt) {
@@ -115,11 +115,11 @@ function logv([string]$txt) {
     [Logging]::WriteLog($txt)
 }
 
-function logcr([string]$color, [string]$txt) {
+function logc([string]$color, [string]$txt) {
     Write-Host -ForegroundColor $color $txt
-    [Logging]::WriteLog(($txt)
+    [Logging]::WriteLog($txt)
 }
 
 function logerror([string]$txt) {
-    logcr "red" $txt
+    logc "red" $txt
 }
