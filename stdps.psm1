@@ -123,3 +123,9 @@ function logc([string]$color, [string]$txt) {
 function logerror([string]$txt) {
     logc "red" $txt
 }
+
+
+#
+# Getting value from hashtable
+#
+function getv($h, $k, $def) { return $h.Contains($k) ? $h.$k : $def }
