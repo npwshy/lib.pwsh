@@ -124,6 +124,12 @@ function logerror([string]$txt) {
     logc "red" $txt
 }
 
+#
+# rotating file(s)
+#
+function rotatefile($fn, $gen) {
+    [Logging]::Rotatelogs($fn, $gen)
+}
 
 #
 # Getting value from hashtable
