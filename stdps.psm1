@@ -80,9 +80,11 @@ class Logging {
     }
 
     static Closelog() {
-        $lockPID = Get-Content -Path ([Logging]::LockFile) -ErrorAction SilentlyContinue
-        if ($lockPID -eq $global:PID) {
-            Remove-Item -Force -Path ([Logging]::LockFile)
+        if ([Logging]::LockFile) {
+            $lockPID = Get-Content -Path ([Logging]::LockFile) -ErrorAction SilentlyContinue
+            if ($lockPID -eq $global:PID) {
+                Remove-Item -Force -Path ([Logging]::LockFile)
+            }
         }
         [Logging]::LogFile = $null
     }
