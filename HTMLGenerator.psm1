@@ -19,6 +19,8 @@ class HTMLGenerator {
 
         $this.Param = $p
         $this.Code = @()
+        $this.Init()
+
         $this.OpenHTML()
         $this.AddHead()
         $this.AddBody()
@@ -73,6 +75,8 @@ class HTMLGenerator {
     #
     # Subclass implementation is expected to override following functions as needed.
     #
+    Init() {} # sub class may want to initialize something
+
     AddHeadContent() { $this.AddContentByTemplate('HeadContent', $this.GetHeadTemplateName) }
     [string]GetHeadTemplateName() { return 'HTML.Template.Head' }
 
