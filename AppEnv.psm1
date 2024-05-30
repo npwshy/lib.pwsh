@@ -6,7 +6,7 @@ class AppEnv {
     static [hashtable] $p = @{}
     static Init($fp) {
         $jd = Get-Content ([IO.Path]::GetFullPath($fp)) |ConvertFrom-Json -Depth 10 -AsHashtable
-        foreach ($k in $jd.Keys) {
+        foreach ($k in $jd.Keys |? { $_ -match '^[A-Za-z]' }) {
             if ($global:PSBoundParameters.count -eq 0 -or -not $global:PSBoundParameters.Keys.Contains($k)) {
                 <#
                 # Param $k is not set in command line
