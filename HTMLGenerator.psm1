@@ -36,7 +36,7 @@ class HTMLGenerator {
     OpenHTML() {
         $this.Code += ,@"
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 "@
     }
 
@@ -48,7 +48,7 @@ class HTMLGenerator {
 
     AddHead() {
         $this.Code += ,'<head>'
-        $this.Code += ,'<meta chatset="UTF-8">'
+        $this.Code += ,'<meta charset="UTF-8">'
         if ($this.Param.Title) {
             $this.Code += ,"<title>$($this.Param.Title)</title>"
         }
