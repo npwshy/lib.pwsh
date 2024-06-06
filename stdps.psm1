@@ -138,7 +138,7 @@ function rotatefile($fn, $gen) {
 #
 function getv($h, $k, $def) { return $h.Contains($k) ? $h.$k : $def }
 
-function getvk2($h, $k1, $k2, $def) { return $h.Contains($k) ? $h.$k : $h.Contains($k2) ? $h.$k2 : $def }
+function getvk2($h, $k1, $k2, $def) { return $h.Contains($k1) ? $h.$k1 : $h.Contains($k2) ? $h.$k2 : $def }
 
 
 #
