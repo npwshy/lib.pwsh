@@ -80,9 +80,11 @@ class Logging {
     }
 
     static Closelog() {
-        $lockPID = Get-Content -Path ([Logging]::LockFile) -ErrorAction SilentlyContinue
-        if ($lockPID -eq $global:PID) {
-            Remove-Item -Force -Path ([Logging]::LockFile)
+        if ([Logging]::LockFile) {
+            $lockPID = Get-Content -Path ([Logging]::LockFile) -ErrorAction SilentlyContinue
+            if ($lockPID -eq $global:PID) {
+                Remove-Item -Force -Path ([Logging]::LockFile)
+            }
         }
         [Logging]::LogFile = $null
     }
@@ -122,4 +124,31 @@ function logc([string]$color, [string]$txt) {
 
 function logerror([string]$txt) {
     logc "red" $txt
+}
+
+#
+# rotating file(s)
+#
+function rotatefile($fn, $gen) {
+    [Logging]::Rotatelogs($fn, $gen)
+}
+
+#
+# Getting value from hashtable
+#
+function getv($h, $k, $def) { return $h.Contains($k) ? $h.$k : $def }
+
+#
+# Array Math
+#
+function addarray([int[]]$a) {
+    $s = 0
+    $a |%{ $s += $_ }
+    $s
+}
+
+function addarray([float[]]$a) {
+    $s = 0.0
+    $a |%{ $s += $_ }
+    $s
 }

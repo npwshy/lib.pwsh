@@ -3,10 +3,10 @@
 #
 
 class AppEnv {
-    static [hashtable] $p = @{}
+    static [hashtable] $p = @{};
     static Init($fp) {
         $jd = Get-Content ([IO.Path]::GetFullPath($fp)) |ConvertFrom-Json -Depth 10 -AsHashtable
-        foreach ($k in $jd.Keys) {
+        foreach ($k in $jd.Keys |? { $_ -match '^[A-Za-z]' }) {
             if ($global:PSBoundParameters.count -eq 0 -or -not $global:PSBoundParameters.Keys.Contains($k)) {
                 <#
                 # Param $k is not set in command line
@@ -17,17 +17,17 @@ class AppEnv {
                 logv "AppEnv: setting overridden by commandline param: $k"
             }
         }
-        [AppEnv]::setLastModified()
+        [AppEnv]::setLastModified($fp)
     }
 
-    static setLastModified() {
+    static setLastModified([string]$fp) {
         $keyLM = 'LastModified'
         $keyLMF = 'LastModifiedFiles'
         if (-not [AppEnv]::p.Contains($keyLM) -or -not [AppEnv]::p.Contains($keyLMF)) { return }
-        if ([AppEnv]::p.$keyLM -ne '%%%AutoUpdate%%%') { return }
+        if ([AppEnv]::p.$keyLM -notmatch '%%%AutoUpdate%%%') { return }
 
-        $file = "?"
-        $lm = Get-Date 1900/1/1
+        $file = Split-Path -Leaf $fp
+        $lm = (Get-Item $fp).LastWriteTime
         foreach ($fname in [AppEnv]::p.$keyLMF -split(',')) {
             $fname = $fname.Trim()
             $fdesc = Get-Item -LiteralPath $fname
