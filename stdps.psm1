@@ -6,6 +6,12 @@ Set-StrictMode -Version latest
 #
 # App startup
 #
+
+function __RunApp($app, $logfile, $gen, $appendMode = $false) {
+    Remove-Item ($logfile + ".lock") -Force -Confirm:$false -Verbose:1 -ErrorAction Ignore
+    RunApp $app $logfile $gen $appendMode
+}
+
 function RunApp($app, $logfile, $gen, $appendMode = $false) {
     if ($global:Args.Count -gt 0) {
         throw Unknown paratemers specified: $($global:Args -join(' '))
