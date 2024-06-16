@@ -29,8 +29,8 @@ function RunApp($app, $logfile, $gen, $appendMode = $false) {
 class Logging {
     static [string] $LogFile;
     static [string] $LockFile;
-    static [string] $DateFormat;
-    static [string] $Encoding;
+    static [string] $DateFormat = 'yyyy\/MM\/dd HH:mm:ss';
+    static [string] $Encoding = 'utf8';
 
     static [bool] $VerboseLogging = $false;
 
@@ -45,8 +45,9 @@ class Logging {
             return;
         }
 
-        [Logging]::Encoding = 'utf8'
-        [Logging]::DateFormat = 'yyyy\/MM\/dd HH:mm:ss'
+        # These two must not be set in Init() as it overwrites caller's setting
+        #[Logging]::Encoding = 'utf8'
+        #[Logging]::DateFormat = 'yyyy\/MM\/dd HH:mm:ss'
         [Logging]::LogFile = [IO.Path]::GetFullPath($fn)
         [Logging]::LockFile = [Logging]::LogFile + '.lock'
         [Logging]::Locklog()
@@ -57,9 +58,9 @@ class Logging {
                 [Logging]::Rotatelogs([Logging]::LogFile, $gen)
             }
             Set-Content -Path ([Logging]::LogFile) -Value $null -Encoding ([Logging]::Encoding)
-            log "Logging started: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
+            log "$($MyInvocation.PSCommandPath) Logging started: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
         } else {
-            log "Logging started in append mode: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
+            log "$($MyInvocation.PSCommandPath) Logging started in append mode: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
         }
     }
 
