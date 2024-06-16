@@ -94,7 +94,14 @@ class HTMLGenerator {
 
     AddContentByTemplate($name, $method) {
         if ($tag = $method.Invoke()) {
-            $fp = [AppEnv]::Get($tag)
+            if (-not ($fp = [AppEnv]::Get($tag, $null))) {
+                log "$($this.GetType().Name).$($name): No template defined. Skipping: $tag"
+                return
+            }
+            if (-not (Test-Path $fp)) {
+                log "$($this.GetType().Name).$($name): Template file not found. Skipping: $fp"
+                return
+            }
             log "$($this.GetType().Name).$($name): Adding $fp"
             $this.Code += Get-Content $fp
         }
