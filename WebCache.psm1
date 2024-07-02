@@ -7,6 +7,7 @@ class WebCache {
     static [DateTime] $Expire = (Get-Date 1900/1/1); # likely never expire
     static [string[]] $PurgeList;
     static $HashFunc;
+    static $WebHookPreAccess;
 
     static Init([string]$dir, [DateTime]$exp) {
         [WebCache]::CacheDir = [IO.Path]::GetFullPath($dir)
@@ -16,7 +17,12 @@ class WebCache {
         log "WebCache.Init: Expire set to: $([WebCache]::Expire.ToString('yyyy\/MM\/dd HH:mm'))"
 
         [WebCache]::InitPurgeList()
+        [WebCache]::ResetWebHook()
     }
+
+    static SetWebHook($cb) { [WebCache]::WebHookPreAccess = $cb }
+    static ResetWebHook() { [WebCache]::WebHookPreAccess = [WebCache]::Noop }
+    static Noop() {}
 
     static [string] GetContent([string]$url) {
         $fp = Join-Path ([WebCache]::CacheDir) ([WebCache]::GetCacheFilename($url))
@@ -32,6 +38,9 @@ class WebCache {
         }
 
         try {
+            # call webhook
+            ([WebCache]::WebHookPreAccess).Invoke()
+
             logc "cyan" "WebCache.GetContent: Accesing $url"
             $res = Invoke-WebRequest -Uri $url -Method Get
             if ($res.StatusCode -eq 200) {
