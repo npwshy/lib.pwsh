@@ -14,7 +14,7 @@ function __RunApp($app, $logfile, $gen, $appendMode = $false) {
 
 function RunApp($app, $logfile, $gen, $appendMode = $false) {
     if ($global:Args.Count -gt 0) {
-        throw "Unknown paratemers specified: $($global:Args -join(' '))"
+        throw "Unknown paratemer(s) specified: $($global:Args -join(' '))"
     }
 
     [Logging]::Init($logfile, $gen, $appendMode)

@@ -5,7 +5,8 @@
 class WebCache {
     static [string] $CacheDir = ".";
     static [DateTime] $Expire = (Get-Date 1900/1/1); # likely never expire
-    static [string[]] $PurgeList;
+    static $PurgeList;
+    static [int] $PurgeBeforeDays = 31;
     static $HashFunc;
     static $WebHookPreAccess;
 
@@ -13,6 +14,8 @@ class WebCache {
         [WebCache]::CacheDir = [IO.Path]::GetFullPath($dir)
         [WebCache]::Expire = $exp
         [WebCache]::HashFunc = New-Object System.Security.Cryptography.SHA256CryptoServiceProvider
+
+        [WebCache]::SetUserAgent($null)
 
         log "WebCache.Init: Expire set to: $([WebCache]::Expire.ToString('yyyy\/MM\/dd HH:mm'))"
 
@@ -41,8 +44,8 @@ class WebCache {
             # call webhook
             ([WebCache]::WebHookPreAccess).Invoke()
 
-            logc "cyan" "WebCache.GetContent: Accesing $url"
-            $res = Invoke-WebRequest -Uri $url -Method Get
+            logc "cyan" "WebCache.GetContent: Accesing $url UserAgent: $([WebCache]::UserAgent)"
+            $res = Invoke-WebRequest -Uri $url -Method Get -SkipHeaderValidation -UserAgent "$([WebCache]::UserAgent)"
             if ($res.StatusCode -eq 200) {
                 $res.Content |Out-File -FilePath $fp -Encoding utf8
                 logv "WebCache.GetContent: Cache saved: $fp, $($res.Content.Length)"
@@ -65,18 +68,31 @@ class WebCache {
     }
 
     static InitPurgeList() {
-        $purgeDate = [DateTime]::Now.AddDays(-31)
+        $purgeDate = [DateTime]::Now.AddDays(-[WebCache]::PurgeBeforeDays)
         $files = Get-ChildItem -File -Path ([WebCache]::CacheDir) |? {$_.LastWriteTime -le $purgeDate } |Sort LastWriteTime
-        [WebCache]::PurgeList = $files.FullName
+        [WebCache]::PurgeList = $files
         log "WebCache: PurgeList created: count=$([WebCache]::PurgeList.Count)"
+    }
+
+    static SetUserAgent([string]$ua) {
+        if (-not $ua) {
+            # set default value if no UA is specified
+            [WebCache]::UserAgent = "Mozilla/5.0 (Windows NT 10.0; Microsoft Windows $($global:PSVersionTable.OS); en-US) PowerShell/$($global:PSVersionTable.PSVersion)"
+        } else {
+            switch ($ua) {
+                'Chrome' { [WebCache]::UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome; break }
+                default { [WebCache]::UserAgent = $ua }
+            }
+        }
     }
 
     static PurgeCacheFile() {
         if ([WebCache]::PurgeList.Count) {
             $f = [WebCache]::PurgeList[0]
-            Remove-Item -Path $f -Force -Confirm:$false -ErrorAction SilentlyContinue
+            $fp = $f.FullName
+            Remove-Item -Path $fp -Force -Confirm:$false -ErrorAction SilentlyContinue
             [WebCache]::PurgeList = [WebCache]::PurgeList -ne $f
-            logv "WebCache: Cache purged: $f"
+            logv "WebCache: Cache purged: $fp ($($f.LastWriteTime.ToString('yyyy\/M\/d HH:mm')))"
         }
     }
 }
