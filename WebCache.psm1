@@ -9,6 +9,7 @@ class WebCache {
     static [int] $PurgeBeforeDays = 31;
     static $HashFunc;
     static $WebHookPreAccess;
+    static [string] $UserAgent;
 
     static Init([string]$dir, [DateTime]$exp) {
         [WebCache]::CacheDir = [IO.Path]::GetFullPath($dir)
