@@ -28,10 +28,12 @@ class WebCache {
     static ResetWebHook() { [WebCache]::WebHookPreAccess = [WebCache]::Noop }
     static Noop() {}
 
-    static [string] GetContent([string]$url) {
+    static [string] GetContent([string]$url) { return [WeBCache]::GetContent($url, [WebCache]::Expire) }
+
+    static [string] GetContent([string]$url, [DateTime]$expire) {
         $fp = Join-Path ([WebCache]::CacheDir) ([WebCache]::GetCacheFilename($url))
         if (Test-Path $fp) {
-            if (($fd = Get-Item $fp).LastWriteTime -gt [WebCache]::Expire) {
+            if (($fd = Get-Item $fp).LastWriteTime -gt $expire) {
                 logv "WebCache.GetContent: Loading from cache: $url, $fp [LWT: $($fd.LastWriteTime.ToString('yyyyMMdd.HHmm'))]"
                 return (Get-Content $fp) -join("`n")
             } else {
