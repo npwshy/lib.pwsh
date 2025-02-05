@@ -5,6 +5,7 @@
 class AppEnv {
     static [hashtable] $p = @{};
     static Init($fp) {
+        logv "AppEnv: Init with $fp"
         $jd = Get-Content ([IO.Path]::GetFullPath($fp)) |ConvertFrom-Json -Depth 10 -AsHashtable
         foreach ($k in $jd.Keys |? { $_ -match '^[A-Za-z]' }) {
             if ($global:PSBoundParameters.count -eq 0 -or -not $global:PSBoundParameters.Keys.Contains($k)) {
@@ -22,21 +23,35 @@ class AppEnv {
 
     static setLastModified([string]$fp) {
         $keyLM = 'LastModified'
-        $keyLMF = 'LastModifiedFiles'
-        if (-not [AppEnv]::p.Contains($keyLM) -or -not [AppEnv]::p.Contains($keyLMF)) { return }
+        if (-not [AppEnv]::p.Contains($keyLM)) { return }
         if ([AppEnv]::p.$keyLM -notmatch '%%%AutoUpdate%%%') { return }
 
         $file = Split-Path -Leaf $fp
         $lm = (Get-Item $fp).LastWriteTime
-        foreach ($fname in [AppEnv]::p.$keyLMF -split(',')) {
-            $fname = $fname.Trim()
-            $fdesc = Get-Item -LiteralPath $fname
+        foreach ($fdesc in [AppEnv]::getLastModifiedFiles()) {
             if ($fdesc.LastWriteTime -gt $lm) {
                 $lm = $fdesc.LastWriteTime
                 $file = $fdesc.Name
             }
         }
         [AppEnv]::Set($keyLM, "$($lm.ToString('yyyy\/M\/d HH:mm:ss')) ($($file))")
+    }
+
+    static [object] getLastModifiedFiles() {
+        $keyLMF = 'LastModifiedFiles'
+        $keyLMM = 'LastModifiedFilesMatches'
+        $rc = @()
+        if ([AppEnv]::p.Contains($keyLMF)) {
+            $files= @(Get-ChildItem ([AppEnv]::p.$keyLMF -split(',') |% { $_.Trim() }))
+            logv "AppEnv: LastModifiedFiles += $($files.Name -join(','))"
+            $rc += $files
+         }
+         if ([AppEnv]::p.Contains($keyLMM)) {
+            $files = @(Get-ChildItem -File |? { $_ -match [AppEnv]::p.$keyLMM })
+            logv "AppEnv: LastModifiedFiles += $($files.Name -join(','))"
+            $rc += $files
+         }
+         return $rc
     }
 
     static Set($k, $v) {
