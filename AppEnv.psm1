@@ -3,6 +3,7 @@
 #
 
 class AppEnv {
+    static [string] $Prefix = ""
     static [hashtable] $p = @{};
     static Init($fp) {
         logv "AppEnv: Init with $fp"
@@ -57,7 +58,7 @@ class AppEnv {
     static Set($k, $v) {
         if ($v) {
             [AppEnv]::p.$k = $v
-            $vn = $k -replace '\.','_'
+            $vn = "$([AppEnv]::Prefix)$k" -replace '\.','_'
             Set-Variable -Name $vn -Scope global -Value $v
         }
     }
