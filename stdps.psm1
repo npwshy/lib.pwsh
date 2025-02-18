@@ -58,9 +58,9 @@ class Logging {
                 [Logging]::Rotatelogs([Logging]::LogFile, $gen)
             }
             Set-Content -Path ([Logging]::LogFile) -Value $null -Encoding ([Logging]::Encoding)
-            log "$($MyInvocation.PSCommandPath) Logging started: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
+            log "$($global:PSCommandPath) Logging started: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
         } else {
-            log "$($MyInvocation.PSCommandPath) Logging started in append mode: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
+            log "$($global:PSCommandPath) Logging started in append mode: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
         }
     }
 
