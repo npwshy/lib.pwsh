@@ -60,7 +60,7 @@ class WebCache {
                 logerror "WebCache.GetContent: Web access error $($res.StatusCode)"
             }
         } catch {
-            logerror "WebCache.GetContent: Web access failed: $_"
+            logerror "WebCache.GetContent: Web access failed: $_ (URL=$url, fp=$fp)"
         }
         return $null
     }
@@ -90,9 +90,11 @@ class WebCache {
     }
 
     static PurgeCacheFile() {
+        logv "WebCache.PurgeCacheFile: Count=$([WebCache]::PurgeList.Count)"
         if ([WebCache]::PurgeList.Count) {
             $f = [WebCache]::PurgeList[0]
             $fp = $f.FullName
+            logv "WebCache.PurgeCacheFile: Purging file: $fp"
             Remove-Item -Path $fp -Force -Confirm:$false -ErrorAction SilentlyContinue
             [WebCache]::PurgeList = [WebCache]::PurgeList -ne $f
             logv "WebCache: Cache purged: $fp ($($f.LastWriteTime.ToString('yyyy\/M\/d HH:mm')))"
