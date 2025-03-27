@@ -30,7 +30,7 @@ class Logging {
     static [string] $LogFile;
     static [string] $LockFile;
     static [string] $DateFormat = 'yyyy\/MM\/dd HH:mm:ss';
-    static [string] $Encoding = 'utf8';
+    static [string] $Encoding = 'utf-8';
 
     static [bool] $VerboseLogging = $false;
 
@@ -46,7 +46,7 @@ class Logging {
         }
 
         # These two must not be set in Init() as it overwrites caller's setting
-        #[Logging]::Encoding = 'utf8'
+        #[Logging]::Encoding = 'utf-8'
         #[Logging]::DateFormat = 'yyyy\/MM\/dd HH:mm:ss'
         [Logging]::LogFile = [IO.Path]::GetFullPath($fn)
         [Logging]::LockFile = [Logging]::LogFile + '.lock'
@@ -66,7 +66,8 @@ class Logging {
 
     static WriteLog($m) {
         if ([Logging]::LogFile) {
-            Add-Content -Path ([Logging]::LogFile) -Value "$(Get-Date -Format ([Logging]::DateFormat)) $m" -Encoding ([Logging]::Encoding)
+            #Add-Content -Path ([Logging]::LogFile) -Value "$(Get-Date -Format ([Logging]::DateFormat)) $m" -Encoding ([Logging]::Encoding)
+            [IO.File]::AppendAllText([Logging]::LogFile, "$(Get-Date -Format ([Logging]::DateFormat)) $m", [Text.Encoding]::GetEncoding([Logging]::Encoding))
         }
     }
 
