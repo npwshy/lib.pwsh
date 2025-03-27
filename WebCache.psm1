@@ -96,7 +96,7 @@ class WebCache {
             $fp = $f.FullName
             logv "WebCache.PurgeCacheFile: Purging file: $fp"
             Remove-Item -Path $fp -Force -Confirm:$false -ErrorAction SilentlyContinue
-            [WebCache]::PurgeList = [WebCache]::PurgeList.Count -eq 1 ? @() : ,[WebCache]::PurgeList[1..([WebCache]::PurgeList.Count - 1)]
+            [WebCache]::PurgeList = [WebCache]::PurgeList.Count -eq 1 ? @() : [WebCache]::PurgeList[1..([WebCache]::PurgeList.Count - 1)]
             logv "WebCache: Cache purged: $fp ($($f.LastWriteTime.ToString('yyyy\/M\/d HH:mm')))"
         }
     }
