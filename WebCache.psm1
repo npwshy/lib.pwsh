@@ -10,6 +10,9 @@ class WebCache {
     static $HashFunc;
     static $WebHookPreAccess;
     static [string] $UserAgent;
+    static [int] $ThrottlingMilliseconds;
+    static [DateTime] $LastCall;
+    static [hashtable] $TrottlingMillisecondsPerHost;
 
     static Init([string]$dir, [DateTime]$exp) {
         [WebCache]::CacheDir = [IO.Path]::GetFullPath($dir)
@@ -22,11 +25,39 @@ class WebCache {
 
         [WebCache]::InitPurgeList()
         [WebCache]::ResetWebHook()
+        [WebCache]::InitThrottlingParam()
     }
 
     static SetWebHook($cb) { [WebCache]::WebHookPreAccess = $cb }
     static ResetWebHook() { [WebCache]::WebHookPreAccess = [WebCache]::Noop }
+    static InitThrottlingParam() {
+        [WebCache]::LastCall = [DateTime]0
+        [WebCache]::ThrottlingMilliseconds = 0
+        [WebCache]::TrottlingMillisecondsPerHost = @{}
+    }
     static Noop() {}
+
+    #
+    # Throttling of accessing web site
+    #
+    static SetThrottling([int]$ms) {
+        [WebCache]::ThrottlingMilliseconds = $ms
+        logv "WebCache: Throttling set=$ms"
+    }
+    static SetThrottling([int]$ms, [string]$hostname) {
+        [WebCache]::TrottlingMillisecondsPerHost.$hostname = $ms
+        logv "WebCache: Throttling set=$ms for $hostname"
+    }
+    static Throttling($url) {
+        $hn = ([URI]$url).Host
+        $ms = [WebCache]::TrottlingMillisecondsPerHost.Contains($hn) ? [WebCache]::TrottlingMillisecondsPerHost.$hn : [WebCache]::ThrottlingMilliseconds
+        $wait = $ms - ([DateTime]::Now - [WebCache]::LastCall).TotalMilliSeconds
+        if ($wait -gt 0) {
+            logv "WebCache: Throttling $wait ms Host:$hn"
+            Start-Sleep -Milliseconds $wait
+        }
+        [WebCache]::LastCall = [DateTime]::Now
+    }
 
     static [string] GetContent([string]$url) { return [WeBCache]::GetContent($url, [WebCache]::Expire) }
 
@@ -47,6 +78,7 @@ class WebCache {
             # call webhook
             ([WebCache]::WebHookPreAccess).Invoke()
 
+            [WebCache]::Throttling($url)
             logc "cyan" "WebCache.GetContent: Accesing $url UserAgent: $([WebCache]::UserAgent)"
             $res = Invoke-WebRequest -Uri $url -Method Get -SkipHeaderValidation -UserAgent "$([WebCache]::UserAgent)"
             if ($res.StatusCode -eq 200) {
