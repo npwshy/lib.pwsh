@@ -67,7 +67,7 @@ class Logging {
     static WriteLog($m) {
         if ([Logging]::LogFile) {
             #Add-Content -Path ([Logging]::LogFile) -Value "$(Get-Date -Format ([Logging]::DateFormat)) $m" -Encoding ([Logging]::Encoding)
-            [IO.File]::AppendAllText([Logging]::LogFile, "$(Get-Date -Format ([Logging]::DateFormat)) $m", [Text.Encoding]::GetEncoding([Logging]::Encoding))
+            [IO.File]::AppendAllText([Logging]::LogFile, "$(Get-Date -Format ([Logging]::DateFormat)) $m`n", [Text.Encoding]::GetEncoding([Logging]::Encoding))
         }
     }
 
