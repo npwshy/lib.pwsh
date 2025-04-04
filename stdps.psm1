@@ -18,7 +18,9 @@ function RunApp($app, $logfile, $gen, $appendMode = $false) {
     }
 
     [Logging]::Init($logfile, $gen, $appendMode)
-    $app.Run()
+    $appObject = $app -is [String] ? (Invoke-Expression "$app::New()")
+        : $app -is [System.Type] ? $app::New() : $app
+    $appObject.Run()
     [Logging]::Closelog()
 }
 
