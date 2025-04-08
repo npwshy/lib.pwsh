@@ -110,14 +110,8 @@ class WebCache {
     }
 
     static SetUserAgent([string]$ua) {
-        if (-not $ua) {
-            # set default value if no UA is specified
-            [WebCache]::UserAgent = "Mozilla/5.0 (Windows NT 10.0; Microsoft Windows $($global:PSVersionTable.OS); en-US) PowerShell/$($global:PSVersionTable.PSVersion)"
-        } else {
-            switch ($ua) {
-                'Chrome' { [WebCache]::UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome; break }
-                default { [WebCache]::UserAgent = $ua }
-            }
+        [WebCache]::UserAgent = $ua ? $ua :
+            "Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.23456; en-US) AppleWebKit/543.2 (KHTML, like Gecko) Safari/543.2"
         }
     }
 
