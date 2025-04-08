@@ -112,7 +112,6 @@ class WebCache {
     static SetUserAgent([string]$ua) {
         [WebCache]::UserAgent = $ua ? $ua :
             "Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.23456; en-US) AppleWebKit/543.2 (KHTML, like Gecko) Safari/543.2"
-        }
     }
 
     static PurgeCacheFile() {
