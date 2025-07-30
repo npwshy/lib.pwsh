@@ -33,6 +33,7 @@ class Logging {
     static [string] $LockFile;
     static [string] $DateFormat = 'yyyy\/MM\/dd HH:mm:ss';
     static [string] $Encoding = 'utf-8';
+    static $WriteStream;
 
     static [bool] $VerboseLogging = $false;
 
@@ -55,21 +56,27 @@ class Logging {
         [Logging]::Locklog()
 
 
+        $msg = ""
         if (-not $appendMode) {
             if ($gen) {
                 [Logging]::Rotatelogs([Logging]::LogFile, $gen)
             }
-            Set-Content -Path ([Logging]::LogFile) -Value $null -Encoding ([Logging]::Encoding)
-            log "$($global:PSCommandPath) Logging started: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
+            $msg = "Logging started:"
         } else {
-            log "$($global:PSCommandPath) Logging started in append mode: $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
+            $msg = "Logging started in append mode:"
         }
+
+        [Logging]::WriteStream = [IO.StreamWriter]::New([Logging]::LogFile, $appendMode, [Text.Encoding]::GetEncoding([Logging]::Encoding))
+        [Logging]::WriteStream.AutoFlush = $true
+        log "$($global:PSCommandPath) $msg $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
     }
 
     static WriteLog($m) {
         if ([Logging]::LogFile) {
             #Add-Content -Path ([Logging]::LogFile) -Value "$(Get-Date -Format ([Logging]::DateFormat)) $m" -Encoding ([Logging]::Encoding)
-            [IO.File]::AppendAllText([Logging]::LogFile, "$(Get-Date -Format ([Logging]::DateFormat)) $m`n", [Text.Encoding]::GetEncoding([Logging]::Encoding))
+            #[IO.File]::AppendAllText([Logging]::LogFile, "$(Get-Date -Format ([Logging]::DateFormat)) $m`n", [Text.Encoding]::GetEncoding([Logging]::Encoding))
+            [Logging]::WriteStream.Write("$(Get-Date -Format ([Logging]::DateFormat)) $m`n")
+            [Logging]::WriteStream.Flush()
         }
     }
 
@@ -95,6 +102,10 @@ class Logging {
             if ($lockPID -eq $global:PID) {
                 Remove-Item -Force -Path ([Logging]::LockFile)
             }
+        }
+        if ([Logging]::WriteStream) {
+            [Logging]::WriteStream.Close()
+            [Logging]::WriteStream = $null
         }
         [Logging]::LogFile = $null
     }
