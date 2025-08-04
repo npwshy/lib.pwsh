@@ -13,6 +13,9 @@ function __RunApp($app, $logfile, $gen, $appendMode = $false) {
 }
 
 function RunApp($app, $logfile, $gen, $appendMode = $false) {
+    if (!(Get-Variable -Scope global -Name Args -ErrorAction SilentlyContinue)) {
+        $Global:Args = @()
+    }
     if ($global:Args.Count -gt 0) {
         throw "Unknown paratemer(s) specified: $($global:Args -join(' '))"
     }
