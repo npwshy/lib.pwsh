@@ -36,6 +36,7 @@ class Logging {
     static [string] $LockFile;
     static [string] $DateFormat = 'yyyy\/MM\/dd HH:mm:ss';
     static [string] $Encoding = 'utf-8';
+    static [bool] $AllowUncommonLogSuffix = $false;
     static $WriteStream;
 
     static [bool] $VerboseLogging = $false;
@@ -49,6 +50,12 @@ class Logging {
             [Logging]::LogFile = $null
             Write-Host "Logging.Init: Logging is disabled as no filename specified."
             return;
+        }
+
+        # safeguarding accidental overwrite to data file
+        if (![Logging]::AllowUncommonLogSuffix -and [IO.Path]::GetExtension($fn) -notmatch '\.(log|txt)') {
+            Write-Error "Logfile specified seems not a log file type: $fn  Set`n'[Logging]::AllowUncommonLogSuffix' to `$true if use of  uncommon suffix nis required."
+            throw "Logfilename not accepted."
         }
 
         # These two must not be set in Init() as it overwrites caller's setting
