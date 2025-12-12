@@ -8,7 +8,8 @@ Set-StrictMode -Version latest
 #
 
 function __RunApp($app, $logfile, $gen, $appendMode = $false) {
-    Remove-Item ($logfile + ".lock") -Force -Confirm:$false -Verbose:1 -ErrorAction Ignore
+    #Remove-Item ($logfile + ".lock") -Force -Confirm:$false -Verbose:1 -ErrorAction Ignore
+    [Logging]::UnlockLogForce($logfile)
     RunApp $app $logfile $gen $appendMode
 }
 
@@ -58,11 +59,7 @@ class Logging {
             throw "Logfilename not accepted."
         }
 
-        # These two must not be set in Init() as it overwrites caller's setting
-        #[Logging]::Encoding = 'utf-8'
-        #[Logging]::DateFormat = 'yyyy\/MM\/dd HH:mm:ss'
-        [Logging]::LogFile = [IO.Path]::GetFullPath($fn)
-        [Logging]::LockFile = [Logging]::LogFile + '.lock'
+        [Logging]::SetLogFilenames($fn)
         [Logging]::Locklog()
 
 
@@ -79,6 +76,14 @@ class Logging {
         [Logging]::WriteStream = [IO.StreamWriter]::New([Logging]::LogFile, $appendMode, [Text.Encoding]::GetEncoding([Logging]::Encoding))
         [Logging]::WriteStream.AutoFlush = $true
         log "$($global:PSCommandPath) $msg $(Get-Date -Format ([Logging]::DateFormat)) $([Logging]::LogFile)"
+    }
+
+    static SetLogFilenames([string]$fn) {
+        # These two must not be set in Init() as it overwrites caller's setting
+        #[Logging]::Encoding = 'utf-8'
+        #[Logging]::DateFormat = 'yyyy\/MM\/dd HH:mm:ss'
+        [Logging]::LogFile = [IO.Path]::GetFullPath($fn)
+        [Logging]::LockFile = [Logging]::LogFile + '.lock'
     }
 
     static WriteLog($m) {
@@ -104,6 +109,30 @@ class Logging {
             Write-Host "Lockfile exists but no process exists: (LockPID=$lockPID)"
             $global:PID |Out-File -FilePath ([Logging]::LockFile) # -NoClobber -- allow overwrting the lockfile
         }
+    }
+
+    static UnlockLogForce([string]$fn) {
+        [Logging]::SetLogFilenames($fn)
+
+        if (!(Test-Path ([Logging]::LockFile))) {
+            # Lockfiles does not exist. No action needed.
+            Write-Host "Okay, no lockfile exists. We are good to go: $([Logging]::LockFile)"
+            return;
+        }
+
+        $lockPID = [int](Get-Content -Path ([Logging]::LockFile))
+        if (!(Get-Process -Id $lockPID -ErrorAction SilentlyContinue)) {
+            Write-Host "Okay, lockfile exists but no creator process running. We should be fine $([Logging]::LockFile)"
+            return
+        }
+
+        Stop-Process -Id $lockPID -Force
+        if ($proc = Get-Process -Id $lockPID -ErrorAction SilentlyContinue) {
+            throw "!! ERROR !! Cannot stop log-locking process: PID=$($lockPID), Name=$($proc.ProcessName)"
+        }
+
+        Remove-Item -LiteralPath ([Logging]::LockFile) -Force -ErrorAction SilentlyContinue
+        Write-Host "Unlock completed: $([Logging]::LockFile)"
     }
 
     static Closelog() {
