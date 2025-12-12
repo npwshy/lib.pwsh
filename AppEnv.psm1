@@ -3,7 +3,7 @@
 #
 
 class AppEnv {
-    static [string] $Prefix = ""
+    static [string] $Prefix = "AppEnv_"
     static [hashtable] $p = @{};
     static Init($fp) {
         logv "AppEnv: Init with $fp"
