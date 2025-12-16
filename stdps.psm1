@@ -116,13 +116,13 @@ class Logging {
 
         if (!(Test-Path ([Logging]::LockFile))) {
             # Lockfiles does not exist. No action needed.
-            Write-Host "Okay, no lockfile exists. We are good to go: $([Logging]::LockFile)"
+            #Write-Host "Okay, no lockfile exists. We are good to go: $([Logging]::LockFile)"
             return;
         }
 
         $lockPID = [int](Get-Content -Path ([Logging]::LockFile))
         if (!(Get-Process -Id $lockPID -ErrorAction SilentlyContinue)) {
-            Write-Host "Okay, lockfile exists but no creator process running. We should be fine $([Logging]::LockFile)"
+            #Write-Host "Okay, lockfile exists but no creator process running. We should be fine $([Logging]::LockFile)"
             return
         }
 
