@@ -1,6 +1,7 @@
 #
 # AppEnv
 #
+using module .\stdps.psm1
 
 class AppEnv {
     static [string] $Prefix = "AppEnv_"
