@@ -1,13 +1,21 @@
 #
 # AppEnv
 #
+# v1: $global:AppEnv_<config-item-name-with-underscores>
+# v2: $global:AppEnv["config-item-name"] or $global:AppEnv.<config-item-name-quote-may-be-needed>
+#
 using module .\stdps.psm1
 
 class AppEnv {
     static [string] $Prefix = "AppEnv_"
+    static [string] $GlobalName = "AppEnv"
+    static $GlobalHashVar;
     static [hashtable] $p = @{};
     static Init($fp) {
-        logv "AppEnv: Init with $fp"
+        logv "AppEnv: Init with $fp; global-var $([AppEnv]::GlobalName) will be set as hashtabe"
+        Set-Variable -Scope global -Name ([AppEnv]::GlobalName) -Value @{}
+        [AppEnv]::GlobalHashVar = Get-Variable -Scope global -Name ([AppEnv]::GlobalName)
+
         $jd = Get-Content ([IO.Path]::GetFullPath($fp)) |ConvertFrom-Json -Depth 10 -AsHashtable
         foreach ($k in $jd.Keys |? { $_ -match '^[A-Za-z]' }) {
             if ($global:PSBoundParameters.count -eq 0 -or -not $global:PSBoundParameters.Keys.Contains($k)) {
@@ -21,6 +29,18 @@ class AppEnv {
             }
         }
         [AppEnv]::setLastModified($fp)
+    }
+
+    static Bind([string]$scriptArgName, [string]$configKeyName) {
+        $argValue = (Get-Variable -Scope global -Name $scriptArgName -ErrorAction Ignore)?.Value
+        if ($argValue) {
+            # script option has value; override the config value
+            [AppEnv]::Set($configKeyName, $argValue)
+        } else {
+            # no value set in script options; set it with Config value
+            #Set-Variable -Scope global -Name $scriptArgName -Value $global:AppEnv[$configKeyName]
+            Set-Variable -Scope global -Name $scriptArgName -Value ([ApPEnv]::GlobalHashVar.Value[$configKeyName])
+        }
     }
 
     static setLastModified([string]$fp) {
@@ -62,6 +82,9 @@ class AppEnv {
             $vn = "$([AppEnv]::Prefix)$k" -replace '\.','_'
             Set-Variable -Name $vn -Scope global -Value $v
         }
+
+        #v2
+        [ApPEnv]::GlobalHashVar.Value[$k] = $v
     }
 
     static [Object] Get($k) {
