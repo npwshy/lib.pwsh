@@ -82,8 +82,10 @@ class Logging {
         # These two must not be set in Init() as it overwrites caller's setting
         #[Logging]::Encoding = 'utf-8'
         #[Logging]::DateFormat = 'yyyy\/MM\/dd HH:mm:ss'
-        [Logging]::LogFile = [IO.Path]::GetFullPath($fn)
-        [Logging]::LockFile = [Logging]::LogFile + '.lock'
+        if ($fn) {
+            [Logging]::LogFile = [IO.Path]::GetFullPath($fn)
+            [Logging]::LockFile = [Logging]::LogFile + '.lock'
+        }
     }
 
     static WriteLog($m) {
@@ -112,6 +114,7 @@ class Logging {
     }
 
     static UnlockLogForce([string]$fn) {
+        if (!$fn) { return }
         [Logging]::SetLogFilenames($fn)
 
         if (!(Test-Path ([Logging]::LockFile))) {
