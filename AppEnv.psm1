@@ -11,21 +11,28 @@ class AppEnv {
     static [string] $GlobalName = "AppEnv"
     static $GlobalHashVar;
     static [hashtable] $p = @{};
-    static Init($fp) {
-        logv "AppEnv: Init with $fp; global-var $([AppEnv]::GlobalName) will be set as hashtabe"
+    static Init($fp) { [AppEnv]::Init($fp, $null) }
+    static Init($file, $file2) {
         Set-Variable -Scope global -Name ([AppEnv]::GlobalName) -Value @{}
         [AppEnv]::GlobalHashVar = Get-Variable -Scope global -Name ([AppEnv]::GlobalName)
 
-        $jd = Get-Content ([IO.Path]::GetFullPath($fp)) |ConvertFrom-Json -Depth 10 -AsHashtable
-        foreach ($k in $jd.Keys |? { $_ -match '^[A-Za-z]' }) {
-            if ($global:PSBoundParameters.count -eq 0 -or -not $global:PSBoundParameters.Keys.Contains($k)) {
-                <#
-                # Param $k is not set in command line
-                # scope must be globa as scope=script will add vars in this script
-                #>
-                [AppEnv]::Set($k, $jd.$k)
-            } else {
-                logv "AppEnv: setting overridden by commandline param: $k"
+        foreach ($fp in @($file, $file2)) {
+            if (!$fp) { continue }
+            if (!(Test-Path $fp)) { continue }
+
+            logv "AppEnv: Init with $fp; global-var $([AppEnv]::GlobalName) will be set as hashtabe"
+
+            $jd = Get-Content ([IO.Path]::GetFullPath($fp)) |ConvertFrom-Json -Depth 10 -AsHashtable
+            foreach ($k in $jd.Keys |? { $_ -match '^[A-Za-z]' }) {
+                if ($global:PSBoundParameters.count -eq 0 -or -not $global:PSBoundParameters.Keys.Contains($k)) {
+                    <#
+                    # Param $k is not set in command line
+                    # scope must be globa as scope=script will add vars in this script
+                    #>
+                    [AppEnv]::Set($k, $jd.$k)
+                } else {
+                    logv "AppEnv: setting overridden by commandline param: $k"
+                }
             }
         }
         [AppEnv]::setLastModified($fp)
